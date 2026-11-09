@@ -468,6 +468,8 @@ window.__feiyuPlay = play;
 
 // ── 表情/嘴型 ──
 let blink = 0, blinkT = 0, nextBlink = 2 + Math.random()*3;
+let talkSmooth = 0;
+let breathPhase = 0;
 let lip = 0;
 function lipValue() {
   const v = window.__songroomLipSync;
@@ -612,7 +614,7 @@ function dxBody(y) {
   const t = performance.now() / 1000;
   const lower = Math.max(0, (y - 480) / 720);       // 下半身：跟随时有延迟（裙摆感）
   return (wp.lean * wgt
-          + wp.talk * Math.sin(t * 6.1) * wgt * 1.6
+          + wp.talk * Math.sin(t * 6.1) * wgt * 1.0
           + Math.sin(t * 1.15 + y * 0.005) * 1.1 * wgt
           + Math.sin(t * 0.52 - 0.85) * 2.2 * lower) * k;
 }
@@ -717,7 +719,10 @@ function frame(now) {
   const t = now/1000;
   const _lipTarget = (typeof window.__lipForce === 'number') ? window.__lipForce : lipValue();
   lip += (_lipTarget - lip) * Math.min(1, dt*18);
-  const talk = lip > 0.05 ? 1 : 0;
+  // 说话强度：低通平滑（原来 lip>0.05?1:0 每帧在 0/1 之间跳，身体会高频抖）
+  const talkTarget = Math.min(1, lip * 1.9);
+  talkSmooth += (talkTarget - talkSmooth) * Math.min(1, dt * 7);
+  const talk = talkSmooth;
 
   // 动作计时
   if (actionLeft > 0) {
@@ -734,9 +739,11 @@ function frame(now) {
   if (wp.blush > 0) wp.blush = Math.max(0, wp.blush - dt / 6.5);
 
   // 摆动
-  const rot = (1.5*Math.sin(t*0.52) + talk*0.8*Math.sin(t*6.1)) * Math.PI/180;
-  const dy  = 4*Math.sin(t*0.9) - talk*3*Math.sin(t*5.2);
-  const sc  = 1 + (0.006 + 0.002*Math.sin(t*0.23)) * Math.sin(t*(1.2 + 0.15*Math.sin(t*0.11)));
+  const rot = (1.15*Math.sin(t*0.52) + talk*0.35*Math.sin(t*6.1)) * Math.PI/180;
+  const dy  = 3.0*Math.sin(t*0.9) - talk*1.1*Math.sin(t*5.2);
+  // 呼吸：用相位累加器（原来的 sin(t*(1.2+0.15sin)) 频率会随 t 无限增长 → 开久了变成高频抖动）
+  breathPhase += dt * (1.15 + 0.18 * Math.sin(t * 0.11));
+  const sc  = 1 + (0.006 + 0.002*Math.sin(t*0.23)) * Math.sin(breathPhase);
 
   // 自研 rig 参数
   const dancing = (cur === 'dance' || cur === 'transform');
@@ -748,19 +755,17 @@ function frame(now) {
       tilt: (Math.random() * 2 - 1) * 2.6,
       lean: (Math.random() * 2 - 1) * 4.2
     };
-    idleNextAt = t + 3.2 + Math.random() * 4.2;
+    idleNextAt = t + 4.5 + Math.random() * 4.5;
   }
   const ease = Math.min(1, dt * 1.9);
   idleNow.turn += (idleTarget.turn - idleNow.turn) * ease;
   idleNow.tilt += (idleTarget.tilt - idleNow.tilt) * ease;
   idleNow.lean += (idleTarget.lean - idleNow.lean) * ease;
 
-  wp.lean = idleNow.lean + 3.4 * Math.sin(t * 0.52) * (dancing ? 1.9 : 1) + talk * 1.7;
-  wp.headTurn = idleNow.turn + 3.0 * Math.sin(t * 0.43) + talk * 1.6 * Math.sin(t * 5.6) + (dancing ? 4 * Math.sin(t * 5.4) : 0);
+  wp.lean = idleNow.lean + 2.7 * Math.sin(t * 0.52) * (dancing ? 1.9 : 1) + talk * 1.0;
+  wp.headTurn = idleNow.turn + 2.3 * Math.sin(t * 0.43) + talk * 0.9 * Math.sin(t * 5.6) + (dancing ? 4 * Math.sin(t * 5.4) : 0);
   wp.headTilt = idleNow.tilt + 0.9 * Math.sin(t * 0.61) + (dancing ? 2.2 * Math.sin(t * 5.4) : 0);
-  wp.headNod  = talk * 1.5 * Math.sin(t * 7.1) + 0.8 * Math.sin(t * 1.35);
-  wp.headTilt = 1.6 * Math.sin(t * 0.47) + (dancing ? 2.2 * Math.sin(t * 5.4) : 0);
-  wp.headNod  = talk * 1.4 * Math.sin(t * 7.1) + 1.2 * Math.sin(t * 1.35);
+  wp.headNod  = idleNow.tilt * 0.35 + talk * 0.9 * Math.sin(t * 4.2) + 0.8 * Math.sin(t * 1.35);
 
   ctx.clearRect(0, 0, W, H);
   ctx.save();
