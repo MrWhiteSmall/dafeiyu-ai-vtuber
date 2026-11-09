@@ -554,7 +554,7 @@ function connectDanmaku() {
         else if (/心|玫瑰|花|棒棒糖|点赞/.test(gname))               play('heart');
         else                                                     play('gift');
         if (Number((d && d.RepeatCount) || 0) > 1) play('count', 2.6);
-        try { giftTick(d); } catch (_) {}
+        try { giftTick(d); if (window.__blush) window.__blush(); } catch (_) {}
         return;
       }
     } catch (_) {}
@@ -584,7 +584,7 @@ setInterval(async () => {
 // ── 主循环 ──
 let last = performance.now();
 // ── 参数化变形（自研 rig）──
-const wp = { lean: 0, talk: 0, tent: 0, bob: 0, headTurn: 0, headTilt: 0, headNod: 0 };
+const wp = { lean: 0, talk: 0, tent: 0, bob: 0, headTurn: 0, headTilt: 0, headNod: 0, blush: 0 };
 // 随机微动作：每隔几秒换一个目标，缓慢过渡，避免机械式正弦
 const idleNow = { turn: 0, tilt: 0, lean: 0 };
 let idleTarget = { turn: 0, tilt: 0, lean: 0 };
@@ -633,6 +633,20 @@ function drawHead(t, k, tx) {
   ctx.rotate(tilt);
   ctx.translate(-px, -py);
   ctx.drawImage(img.rhead, tx, 0, RIG.size[0] * k, H);
+  if (wp.blush > 0.01) {   // 表情：腮红（礼物/被夸时冒出来）
+    const bs = 44 * k, by = 282 * k;
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-atop';
+    for (const bx of [368 * k, 506 * k]) {
+      const g = ctx.createRadialGradient(bx, by, 2, bx, by, bs);
+      g.addColorStop(0, 'rgba(255,110,140,' + (0.34 * wp.blush).toFixed(3) + ')');
+      g.addColorStop(0.62, 'rgba(255,120,150,' + (0.16 * wp.blush).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(255,140,170,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(bx, by, bs, bs * 0.72, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
   if (eyesPatch && blink > 0.01) {
     ctx.globalAlpha = Math.min(1, blink);
     ctx.drawImage(eyesPatch.canvas, tx + eyesPatch.x * k, eyesPatch.y * k, eyesPatch.w * k, eyesPatch.h * k);
@@ -693,6 +707,7 @@ function frame(now) {
     }
   }
   if (fade < 1) fade = Math.min(1, fade + dt/0.26);
+  if (wp.blush > 0) wp.blush = Math.max(0, wp.blush - dt / 6.5);
 
   // 摆动
   const rot = (1.5*Math.sin(t*0.52) + talk*0.8*Math.sin(t*6.1)) * Math.PI/180;
@@ -798,6 +813,7 @@ function tick() {
 }
 setTimeout(tick, 900);
 
+window.__blush = () => { wp.blush = 1; };
 window.__rigWp = (a, b, c, d) => { wp.lean = a; wp.tent = b; if (c !== undefined) wp.headTurn = c; if (d !== undefined) wp.headTilt = d; };
 window.__feiyuReady = true;
 </script>
