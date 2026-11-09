@@ -198,7 +198,7 @@ def start_server():
                         return CommonResult(code=-1, message="content 不能为空")
                     username = str(payload.get("username") or "大章鱼")
                     logger.info(f"内部HTTP API say接口：{username}：{content}")
-                    message = build_message(config, "idle_time_task", username, content)
+                    message = build_message(config, "idle_time_task", username, content, content_type="comment")
                     my_handle.audio_synthesis_handle(message)
                     return CommonResult(code=200, message="成功")
                 except Exception as e:
@@ -382,7 +382,7 @@ def start_server():
                     _last = _pick
                     _text = _random.choice(_tpl).format(name=_pick)
                     logger.info(f"[定时祝福] 送给 {_pick}：{_text}")
-                    _msg = _build(config, "idle_time_task", _pick, _text)
+                    _msg = _build(config, "idle_time_task", _pick, _text, content_type="comment")
                     my_handle.audio_synthesis_handle(_msg)
                 except Exception as _e:
                     logger.warning(f"[定时祝福] 出错：{_e}")
@@ -422,7 +422,7 @@ def start_server():
                         logger.warning(f"[关注提醒] 写横幅状态失败：{_e2}")
                     logger.info(f"[关注提醒] {_text}")
                     my_handle.audio_synthesis_handle(
-                        _build(config, "idle_time_task", "观众", _text))
+                        _build(config, "idle_time_task", "观众", _text, content_type="comment"))
                 except Exception as _e:
                     logger.warning(f"[关注提醒] 出错：{_e}")
 
