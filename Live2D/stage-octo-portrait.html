@@ -342,6 +342,8 @@ const load = (k, src) => new Promise(res => {
   i.onerror = () => res();
   i.src = './assets/octo/' + src;
 });
+load('rbody', 'rig/body_t.png');
+load('rtent', 'rig/tent_t.png');
 Promise.all(Object.entries(FILES).map(([k, v]) => load(k, v))).then(() => {
   buildPatches();
   window.__feiyuLoaded = Object.keys(img).length;
@@ -578,6 +580,35 @@ setInterval(async () => {
 
 // ── 主循环 ──
 let last = performance.now();
+// ── 参数化变形（自研 rig）──
+const wp = { lean: 0, talk: 0, tent: 0, bob: 0 };
+function dxBody(y) {
+  const wgt = Math.max(0, 1 - y / 560);
+  const k = H / RIG.size[1];
+  return (wp.lean * wgt + wp.talk * Math.sin(performance.now() / 1000 * 6.1) * wgt * 1.6
+          + Math.sin(performance.now() / 1000 * 1.15 + y * 0.005) * 1.1 * wgt) * k;
+}
+function dxTent(y) {
+  const kk = Math.max(0, (y - 860) / 340);
+  const k = H / RIG.size[1];
+  return (wp.tent * kk + Math.sin(performance.now() / 1000 * 1.6 + y * 0.012) * 2.2 * kk) * k;
+}
+function drawBands(im, dxFn, alpha) {
+  const k = H / RIG.size[1];
+  const wid = RIG.size[0] * k;
+  const tx0 = (W - wid) / 2;
+  const bands = 60, bh = H / bands;
+  ctx.globalAlpha = alpha;
+  for (let i = 0; i < bands; i++) {
+    const y = Math.floor(i * bh);
+    const hh = Math.min(Math.ceil(bh) + 1, H - y);
+    if (hh <= 0) break;
+    const sy = y / k, sh = hh / k;
+    ctx.drawImage(im, 0, sy, RIG.size[0], sh, tx0 + dxFn(sy + sh / 2), y, wid, hh);
+  }
+  ctx.globalAlpha = 1;
+}
+
 function drawOne(name, alpha, rot, dy, sc, tx, ty) {
   let im = null;
   if (CLIPS[name]) {
@@ -590,9 +621,18 @@ function drawOne(name, alpha, rot, dy, sc, tx, ty) {
   if (!im) im = img.base;
   if (!im || alpha <= 0.001) return;
   const k = H / RIG.size[1];
-  ctx.globalAlpha = alpha;
-  ctx.drawImage(im, tx, ty, RIG.size[0]*k, H);
-  ctx.globalAlpha = 1;
+  if (CLIPS[name]) {                 // 多帧片段：整图播放
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(im, tx, ty, RIG.size[0] * k, H);
+    ctx.globalAlpha = 1;
+    return;
+  }
+  if (name === 'base' && img.rbody) { // 站立基础形象：拆层 + 条带变形
+    if (img.rtent) drawBands(img.rtent, dxTent, alpha);
+    drawBands(img.rbody, dxBody, alpha);
+    return;
+  }
+  drawBands(im, dxBody, alpha);
 }
 
 function frame(now) {
@@ -619,6 +659,12 @@ function frame(now) {
   const rot = (1.5*Math.sin(t*0.52) + talk*0.8*Math.sin(t*6.1)) * Math.PI/180;
   const dy  = 4*Math.sin(t*0.9) - talk*3*Math.sin(t*5.2);
   const sc  = 1 + 0.006*Math.sin(t*1.2);
+
+  // 自研 rig 参数
+  const dancing = (cur === 'dance' || cur === 'transform');
+  wp.lean = 7.0 * Math.sin(t * 0.52) * (dancing ? 1.8 : 1);
+  wp.talk = talk * (dancing ? 1.4 : 1);
+  wp.tent = (dancing ? 5.0 : 2.6) * Math.sin(t * (dancing ? 2.4 : 0.9));
 
   ctx.clearRect(0, 0, W, H);
   ctx.save();
@@ -671,6 +717,7 @@ function tick() {
 }
 setTimeout(tick, 900);
 
+window.__rigWp = (a, b) => { wp.lean = a; wp.tent = b; };
 window.__feiyuReady = true;
 </script>
 

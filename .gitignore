@@ -327,3 +327,8 @@ Live2D/live2d-model/
 
 # 闲时文案的旧配音（大 wav，运行时按需准备）
 data/闲时任务/
+
+# 第三方样本模型（仅测试，不入库）
+Live2D/vendor/models/
+Live2D/*.bak-*
+Live2D/assets/octo/rig/
