@@ -316,7 +316,7 @@ addEventListener('resize', fitStage); fitStage();
 const cvs = document.getElementById('avatar');
 const ctx = cvs.getContext('2d');
 const W = cvs.width, H = cvs.height;
-const RIG = { size:[875,1200], eyes:[348,222,552,292], mouth:[424,303,470,336] };
+const RIG = { size:[875,1200], eyes:[348,222,552,292], mouth:[404,286,482,358] };
 
 // ── 素材 ──
 const FILES = {
@@ -378,9 +378,26 @@ function makePatch(srcImg, box, pad) {
   cc.drawImage(srcImg, x0-pad, y0-pad, w, h, 0, 0, w, h);
   return { canvas: feather(c), x: x0-pad, y: y0-pad, w, h };
 }
+function makePatchSoft(srcImg, box, pad) {
+  const [x0,y0,x1,y1] = box;
+  const w = (x1-x0) + pad*2, h = (y1-y0) + pad*2;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const cc = c.getContext('2d');
+  cc.drawImage(srcImg, x0-pad, y0-pad, w, h, 0, 0, w, h);
+  const g = cc.createRadialGradient(w/2, h/2, Math.min(w,h)*0.30, w/2, h/2, Math.max(w,h)*0.58);
+  g.addColorStop(0, 'rgba(0,0,0,1)');
+  g.addColorStop(0.78, 'rgba(0,0,0,0.92)');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  const m = document.createElement('canvas'); m.width = w; m.height = h;
+  const mc = m.getContext('2d');
+  mc.drawImage(c, 0, 0);
+  mc.globalCompositeOperation = 'destination-in';
+  mc.fillStyle = g; mc.fillRect(0, 0, w, h);
+  return { canvas: m, x: x0-pad, y: y0-pad, w, h };
+}
 function buildPatches() {
   if (img.closed) eyesPatch  = makePatch(img.closed, RIG.eyes, 26);
-  if (img.open)   mouthPatch = makePatch(img.open,   RIG.mouth, 16);
+  if (img.open)   mouthPatch = makePatchSoft(img.open, RIG.mouth, 6);
 }
 
 // ── 动作表 ──
@@ -652,13 +669,19 @@ function drawHead(t, k, tx) {
     ctx.drawImage(eyesPatch.canvas, tx + eyesPatch.x * k, eyesPatch.y * k, eyesPatch.w * k, eyesPatch.h * k);
     ctx.globalAlpha = 1;
   }
-  if (mouthPatch && lip > 0.02) {
-    const allowMouth = ACTS[cur] && ACTS[cur].mouth;
-    if (allowMouth) {
-      ctx.globalAlpha = Math.min(0.98, lip * 1.35);
-      ctx.drawImage(mouthPatch.canvas, tx + mouthPatch.x * k, mouthPatch.y * k, mouthPatch.w * k, mouthPatch.h * k);
-      ctx.globalAlpha = 1;
-    }
+  if (lip > 0.03 && ACTS[cur] && ACTS[cur].mouth) {
+    // 程序化张嘴：锚在基础图嘴心 (442,314)，椭圆随音量缩放
+    const mx = tx + 442 * k, my = 314 * k;
+    const mw = (4.6 + lip * 4.6) * k;
+    const mh = (0.9 + lip * 17.0) * k;
+    ctx.beginPath();
+    ctx.ellipse(mx, my, mw, mh, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(126,54,60,' + (0.80 + 0.18 * lip).toFixed(3) + ')';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(mx, my + mh * 0.42, mw * 0.72, mh * 0.42, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(196,96,104,' + (0.55 * lip).toFixed(3) + ')';
+    ctx.fill();
   }
   ctx.restore();
 }
@@ -692,7 +715,8 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last)/1000); last = now;
   if (!img.base) { requestAnimationFrame(frame); return; }
   const t = now/1000;
-  lip += (lipValue() - lip) * Math.min(1, dt*18);
+  const _lipTarget = (typeof window.__lipForce === 'number') ? window.__lipForce : lipValue();
+  lip += (_lipTarget - lip) * Math.min(1, dt*18);
   const talk = lip > 0.05 ? 1 : 0;
 
   // 动作计时
@@ -763,25 +787,7 @@ function frame(now) {
       ctx.drawImage(eyesPatch.canvas, tx + eyesPatch.x*k, ty + eyesPatch.y*k, eyesPatch.w*k, eyesPatch.h*k);
       ctx.globalAlpha = 1;
     }
-    if (mouthPatch && lip > 0.02 && allowMouth) {
-      ctx.globalAlpha = Math.min(0.98, lip*1.35);
-      ctx.drawImage(mouthPatch.canvas, tx + mouthPatch.x*k, ty + mouthPatch.y*k, mouthPatch.w*k, mouthPatch.h*k);
-      ctx.globalAlpha = 1;
-    }
-  }
-  ctx.restore();
-
-  // 眨眼/嘴型只在基础动作上叠加
-  const allowMouth = ACTS[cur] && ACTS[cur].mouth;
-  if (eyesPatch && blink > 0.01 && cur === 'base') {
-    ctx.globalAlpha = Math.min(1, blink);
-    ctx.drawImage(eyesPatch.canvas, tx + eyesPatch.x*k, ty + eyesPatch.y*k, eyesPatch.w*k, eyesPatch.h*k);
-    ctx.globalAlpha = 1;
-  }
-  if (mouthPatch && lip > 0.02 && allowMouth) {
-    ctx.globalAlpha = Math.min(0.98, lip*1.35);
-    ctx.drawImage(mouthPatch.canvas, tx + mouthPatch.x*k, ty + mouthPatch.y*k, mouthPatch.w*k, mouthPatch.h*k);
-    ctx.globalAlpha = 1;
+    // 过渡帧不画口型，避免与头部变换叠加后漂移
   }
   ctx.restore();
 
