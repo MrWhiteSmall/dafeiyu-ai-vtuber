@@ -227,10 +227,19 @@ body.game-on #tvwrap,body.game-on #actpanel{opacity:.5;transition:opacity .3s}
 #leftpanel .lp-song{font-size:17px !important}
 #leftpanel .lp-line{font-size:16px !important}
 #leftpanel .lp-val{font-size:25px !important}
-#leftpanel .lp-kv{font-size:12px !important}
-#leftpanel .lp-sub{font-size:11px !important}
-#leftpanel .lp-cell b{font-size:21px !important}
-#leftpanel .lp-cell span{font-size:10px !important;white-space:nowrap}
+#leftpanel .lp-kv{font-size:13px !important}
+#leftpanel .lp-sub{font-size:12px !important}
+#leftpanel .lp-cell b{font-size:22px !important}
+#leftpanel .lp-cell span{font-size:11px !important;white-space:nowrap}
+
+/* 清晰度：小字提亮 + 描边阴影，压缩后更抗糊 */
+#giftcard .row, #giftcard .foot, #giftbar .gk, #likebar .gk, #likebar .gt,
+#leftpanel .lp-kv, #leftpanel .lp-sub, #leftpanel .lp-cell span, #ability .v, #actpanel .ah2 i{
+  color:#a9d8f5;
+  text-shadow:0 1px 2px rgba(2,10,22,.85), 0 0 6px rgba(2,10,22,.45);
+}
+#giftbar .gk, #likebar .gk{font-size:13.5px}
+#ability .ab-item .v{font-size:11.5px}
 
 /* 人物居中偏右 */
 #avatar-wrap{left:390px;bottom:562px;width:660px;height:905px}
@@ -311,6 +320,8 @@ body.game-on #tvwrap,body.game-on #actpanel{opacity:.5;transition:opacity .3s}
     <div class="ab-item" data-i="9"><span class="ico">😆</span><span class="txt"><span class="k">讲个笑话</span><span class="v">发「讲个笑话」听一段</span></span></div>
     <div class="af">形象与声音均由 AI 实时生成</div>
   </div>
+  <div id="followtip"><span class="ft-dot"></span><b>关注不迷路</b><i>·</i><b>感谢大家给本章鱼点小心心</b></div>
+  <div id="welcomestack"></div>
 </main>
 <script src="./js/songroom-lipsync.js?v=20261028-lip1"></script>
 <script>
@@ -1054,8 +1065,6 @@ window.__paintHint = function () {
 @keyframes welcomeIn{from{opacity:0;transform:translateY(16px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes welcomeOut{to{opacity:0;transform:translateY(-12px) scale(.94)}}
 </style>
-<div id="followtip"><span class="ft-dot"></span><b>关注不迷路</b><i>·</i><b>感谢大家给本章鱼点小心心</b></div>
-<div id="welcomestack"></div>
 <script>
 (function(){
   var el = document.getElementById('followtip');

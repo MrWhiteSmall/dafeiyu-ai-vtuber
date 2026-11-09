@@ -56,7 +56,8 @@
       <div class="lp-cell"><b id="lp-gifts">–</b><span>收到礼物</span></div>
     </div>
   `;
-  document.body.appendChild(box);
+  // 必须挂在 #stage 里，才会跟随 fitStage 一起缩放（挂 body 上的话超采样时会变半尺寸）
+  (document.getElementById('stage') || document.body).appendChild(box);
 
   const elHead = box.querySelector('#lp-head');
   const elSong = box.querySelector('#lp-song');
