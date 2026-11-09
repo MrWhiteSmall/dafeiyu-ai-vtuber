@@ -1930,5 +1930,11 @@
             "enable": true,
             "cooldown_seconds": 30
         }
+    },
+    "proactive": {
+        "enabled": true,
+        "song_idle_seconds": 600,
+        "ask_interval": 300,
+        "joke_interval": 600
     }
 }

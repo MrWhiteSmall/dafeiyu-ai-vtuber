@@ -20,6 +20,8 @@ from .gpt_model.gpt import GPT_MODEL
 from .my_log import logger
 from . import alarm
 from . import msg_log
+from . import stage_state
+from . import jokes
 from .message import build as build_message
 from .db import SQLiteDB
 from .my_translate import My_Translate
@@ -3354,6 +3356,31 @@ class My_handle(metaclass=SingletonMeta):
                         self.audio_synthesis_handle(message)
             except Exception as e:
                 logger.error(traceback.format_exc())
+
+            # 0.5、冷笑话指令（观众自己触发，「讲个笑话」）
+            if jokes.is_joke_cmd(content):
+                try:
+                    _joke = jokes.joke_line()
+                    logger.info(f"[冷笑话] {username}：{_joke}")
+                    self.audio_synthesis_handle(
+                        build_message(My_handle.config, "comment", username, _joke))
+                except Exception as _e:
+                    logger.warning(f"[冷笑话] 出错：{_e}")
+                return
+
+            # 0.6、把「观众这条提问」推到画面卡片（让全场都看见她正在回答谁）
+            try:
+                _t = (content or "").strip()
+                _is_cmd = (
+                    _t.startswith("点歌") or _t.startswith("点一首") or _t.startswith("切歌")
+                    or _t.startswith("换一首") or _t.startswith("签到") or _t.startswith("抽个签")
+                    or _t.startswith("抽签") or _t.startswith("猜拳") or _t.startswith("贪吃蛇")
+                    or _t.startswith("你画我猜") or _t.startswith("历史快答")
+                )
+                if len(_t) >= 3 and not _is_cmd:
+                    stage_state.show_ask(username, _t, "user")
+            except Exception:
+                pass
 
             # 1、本地问答库 处理
             if self.local_qa_handle(data):

@@ -370,9 +370,19 @@ def start_server():
             ]
             _last = ""
             _time.sleep(20)          # 等服务起来再开始
+            from utils import stage_state as _ss2
             while True:
                 try:
-                    _time.sleep(60)
+                    _time.sleep(150)     # 原来 60 秒一条，太密；改成 150 秒
+                    # 抢不到麦就稍后再试几次，避免被别的定时行为长期饿死
+                    _ok = False
+                    for _try in range(6):
+                        if _ss2.claim_slot(70):
+                            _ok = True
+                            break
+                        _time.sleep(12)
+                    if not _ok:
+                        continue
                     _users = _ml.present_users(600)
                     if not _users:
                         continue
@@ -427,6 +437,169 @@ def start_server():
                     logger.warning(f"[关注提醒] 出错：{_e}")
 
         threading.Thread(target=follow_reminder_thread, daemon=True, name="follow-reminder").start()
+
+        # ── 主动行为：闲置放歌 / 随机提问观众 / 冷笑话 ────────────────────────
+        # 三个线程共用 stage_state.claim_slot(抢麦)，避免同一时间抢着说话
+        def _proactive_cfg(key, default):
+            try:
+                v = config.get("proactive", key)
+                return float(v) if v not in (None, "", 0) else float(default)
+            except Exception:
+                return float(default)
+
+        def proactive_song_thread():
+            """十分钟没在放歌，就自己挑一首。"""
+            import random as _random
+            import time as _time
+            from utils import stage_state as _ss
+            from utils.my_handle import My_handle as _MH
+
+            _idle_since = _time.time()
+            _time.sleep(30)
+            while True:
+                try:
+                    _time.sleep(30)
+                    _playing = getattr(_MH, "_song_playing", None)
+                    _queue = getattr(_MH, "_song_queue", None) or []
+                    if _playing or _queue:
+                        _idle_since = _time.time()
+                        continue
+                    _idle_for = _time.time() - _idle_since
+                    _need = _proactive_cfg("song_idle_seconds", 600)
+                    if _idle_for < _need:
+                        continue
+                    # 抢不到麦就稍后再试几次，避免被别的定时行为长期饿死
+                    _ok = False
+                    for _try in range(6):
+                        if _ss.claim_slot(40):
+                            _ok = True
+                            break
+                        _time.sleep(12)
+                    if not _ok:
+                        continue
+                    _dir = My_handle.config.get("choose_song", "song_path")
+                    _path = My_handle.common.random_search_a_audio_file(_dir)
+                    if not _path:
+                        logger.warning("[自动放歌] 曲库没抽到文件")
+                        _idle_since = _time.time()
+                        continue
+                    if _path == getattr(_MH, "_last_song_path", None):
+                        _alt = My_handle.common.random_search_a_audio_file(_dir)
+                        if _alt and _alt != _path:
+                            _path = _alt
+                    _title = _MH._song_title(_path)
+                    _tip = _random.choice([
+                        "好久没放歌了，我自己挑一首——《{t}》。",
+                        "安静太久了，来点音乐——《{t}》，先听着。",
+                        "没人点歌那我就自己放了，《{t}》。",
+                    ]).format(t=_title)
+                    logger.info(f"[自动放歌] 闲置 {int(_idle_for)} 秒，播放《{_title}》")
+                    _song_order = my_handle._song_enqueue("大章鱼", _path, playing_tip=_tip)
+                    logger.info(f"[自动放歌] 结果 {_song_order}")
+                    _idle_since = _time.time()
+                except Exception as _e:
+                    logger.warning(f"[自动放歌] 出错：{_e}")
+
+        threading.Thread(target=proactive_song_thread, daemon=True, name="proactive-song").start()
+
+        def proactive_ask_thread():
+            """每五分钟，随机挑一位在场观众，问一个问题（同时把问题弹到画面上）。"""
+            import random as _random
+            import time as _time
+            from utils import msg_log as _ml
+            from utils import stage_state as _ss
+            from utils.message import build as _build
+
+            _qs = [
+                "今天有没有遇到什么让你想笑的小事？",
+                "问你个事，你最近一次熬夜是为了什么？",
+                "如果现在能瞬移，你最想去哪儿待着？",
+                "你手机里存得最久的一张图是什么？",
+                "最近有没有哪首歌，你一听就想单曲循环？",
+                "你觉得海底最深处会有什么东西？",
+                "说一个你小时候坚信不疑的离谱知识？",
+                "如果明天不用上班上学，你打算怎么过？",
+                "你吃过最奇怪的一种食物搭配是什么？",
+                "你更喜欢下雨天还是大晴天？为什么？",
+                "最近有什么小事让你觉得「还挺好」？",
+                "如果养一只不会捣乱的宠物，你想养什么？",
+                "你会因为什么理由，突然给朋友发消息？",
+                "说一件你一直想学但还没开始的事？",
+                "你觉得什么样的人最好聊？",
+                "有没有哪句话，你一直记到现在？",
+                "你现在最想吃到的东西是什么？",
+                "如果给你一天隐身，你会去干什么？",
+                "你最近在追什么剧或者看什么书？",
+                "夏天最舒服的一刻是什么时候？",
+                "你小时候的梦想职业是什么？",
+                "如果只能带一样东西去荒岛，你带什么？",
+            ]
+            _last_user = ""
+            _last_q = ""
+            _time.sleep(90)
+            while True:
+                try:
+                    _time.sleep(max(60.0, _proactive_cfg("ask_interval", 300) + _random.uniform(-60, 60)))
+                    _users = [u for u in _ml.present_users(900) if u and "测试" not in u]
+                    if not _users:
+                        continue
+                    _pick = _random.choice(_users)
+                    if len(_users) > 1 and _pick == _last_user:
+                        _pick = _random.choice([u for u in _users if u != _last_user])
+                    _q = _random.choice(_qs)
+                    if _q == _last_q:
+                        _q = _random.choice([x for x in _qs if x != _last_q])
+                    # 抢不到麦就稍后再试几次，避免被别的定时行为长期饿死
+                    _ok = False
+                    for _try in range(6):
+                        if _ss.claim_slot(45):
+                            _ok = True
+                            break
+                        _time.sleep(12)
+                    if not _ok:
+                        continue
+                    _last_user, _last_q = _pick, _q
+                    _text = f"{_pick}，{_q}"
+                    logger.info(f"[主动聊天] 问 {_pick}：{_q}")
+                    _ss.show_ask(_pick, _q, "bot")
+                    my_handle.audio_synthesis_handle(
+                        _build(config, "idle_time_task", _pick, _text, content_type="comment"))
+                except Exception as _e:
+                    logger.warning(f"[主动聊天] 出错：{_e}")
+
+        threading.Thread(target=proactive_ask_thread, daemon=True, name="proactive-ask").start()
+
+        def joke_thread():
+            """每十分钟一个冷笑话。"""
+            import time as _time
+            from utils import stage_state as _ss
+            from utils import jokes as _jokes
+            from utils.message import build as _build
+
+            _time.sleep(150)
+            _n = 0
+            while True:
+                try:
+                    _time.sleep(max(120.0, _proactive_cfg("joke_interval", 600)))
+                    # 抢不到麦就稍后再试几次，避免被别的定时行为长期饿死
+                    _ok = False
+                    for _try in range(6):
+                        if _ss.claim_slot(45):
+                            _ok = True
+                            break
+                        _time.sleep(12)
+                    if not _ok:
+                        continue
+                    _line = _jokes.joke_line()
+                    _n += 1
+                    logger.info(f"[冷笑话] 定时第 {_n} 条：{_line}")
+                    my_handle.audio_synthesis_handle(
+                        _build(config, "idle_time_task", "观众", _line, content_type="comment"))
+                except Exception as _e:
+                    logger.warning(f"[冷笑话] 定时出错：{_e}")
+
+        threading.Thread(target=joke_thread, daemon=True, name="joke").start()
+
 
     
 

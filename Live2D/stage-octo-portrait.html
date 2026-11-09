@@ -297,6 +297,10 @@ body.game-on #tvwrap,body.game-on #actpanel{opacity:.5;transition:opacity .3s}
   <div id="ground"></div>
   <div id="avatar-wrap"><canvas id="avatar" width="875" height="1200"></canvas></div>
   <div id="act-tag"></div>
+  <div id="askcard"><div class="qa" id="ask-ava">?</div><div class="qb">
+    <div class="q1" id="ask-who">观众 问</div>
+    <div class="q2" id="ask-text"></div>
+  </div></div>
   <div id="ability"><div class="ah"><b>本章鱼能干的</b><span class="ai-badge">AI 虚拟主播</span></div>
     <div class="ab-item" data-i="0"><span class="ico">🎵</span><span class="txt"><span class="k">点歌</span><span class="v">发「点歌 起风了」</span></span></div>
     <div class="ab-item" data-i="2"><span class="ico">🎲</span><span class="txt"><span class="k">抽签</span><span class="v">发「抽个签」看运势</span></span></div>
@@ -304,6 +308,7 @@ body.game-on #tvwrap,body.game-on #actpanel{opacity:.5;transition:opacity .3s}
     <div class="ab-item bonus" data-i="6"><span class="ico">🐍</span><span class="txt"><span class="k">贪吃蛇</span><span class="v">发「贪吃蛇」看她玩</span></span></div>
     <div class="ab-item bonus" data-i="7"><span class="ico">✏️</span><span class="txt"><span class="k">你画我猜</span><span class="v">发「你画我猜」来玩</span></span></div>
     <div class="ab-item bonus" data-i="8"><span class="ico">📜</span><span class="txt"><span class="k">历史快答</span><span class="v">发「历史快答」答题</span></span></div>
+    <div class="ab-item" data-i="9"><span class="ico">😆</span><span class="txt"><span class="k">讲个笑话</span><span class="v">发「讲个笑话」听一段</span></span></div>
     <div class="af">形象与声音均由 AI 实时生成</div>
   </div>
 </main>
@@ -1073,6 +1078,51 @@ window.__paintHint = function () {
   }
   setInterval(poll, 2000);
   window.__followTip = show;
+})();
+</script>
+<style>
+#askcard{position:absolute;left:50%;bottom:300px;transform:translateX(-50%) translateY(16px);
+  width:min(880px,78vw);display:none;align-items:flex-start;gap:14px;z-index:24;
+  padding:14px 22px 15px;border-radius:20px;
+  background:linear-gradient(150deg,rgba(8,26,48,.94),rgba(6,18,34,.96));
+  border:1px solid rgba(120,200,255,.32);box-shadow:0 12px 34px rgba(0,0,0,.5);
+  opacity:0;transition:opacity .28s ease,transform .28s ease;pointer-events:none}
+#askcard.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+#askcard .qa{flex:0 0 auto;width:46px;height:46px;border-radius:13px;display:flex;align-items:center;
+  justify-content:center;font-size:21px;font-weight:800;color:#04121f;
+  background:linear-gradient(135deg,#8fe3ff,#ffd479)}
+#askcard .qb{min-width:0;flex:1 1 auto}
+#askcard .q1{font-size:15px;color:#9fd0f0;margin-bottom:3px;letter-spacing:.5px}
+#askcard .q2{font-size:26px;line-height:1.36;color:#f2fbff;word-break:break-word;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+</style>
+<script>
+(function(){
+  var el = document.getElementById('askcard');
+  if (!el) return;
+  var who = document.getElementById('ask-who');
+  var txt = document.getElementById('ask-text');
+  var ava = document.getElementById('ask-ava');
+  var last = 0, hideAt = 0;
+  function show(j){
+    var u = (j.user || '观众').toString();
+    who.textContent = (j.role === 'bot') ? ('大章鱼 问 ' + u) : (u + ' 问');
+    txt.textContent = (j.text || '').toString();
+    ava.textContent = Array.from(u)[0] || '?';
+    el.classList.add('show');
+    hideAt = Date.now() + 9000;
+  }
+  window.__askShow = show;
+  function poll(){
+    fetch('./ask_show.json?t=' + Date.now(), {cache: 'no-store'})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        if (!d || !d.at) return;
+        if (d.at > last) { last = d.at; show(d); }
+      }).catch(function(){});
+    if (hideAt && Date.now() > hideAt) { el.classList.remove('show'); hideAt = 0; }
+  }
+  setInterval(poll, 1500);
 })();
 </script>
 </body></html>

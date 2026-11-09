@@ -332,3 +332,4 @@ data/闲时任务/
 Live2D/vendor/models/
 Live2D/*.bak-*
 Live2D/assets/octo/rig/
+Live2D/ask_show.json
