@@ -697,7 +697,7 @@ function frame(now) {
   // 摆动
   const rot = (1.5*Math.sin(t*0.52) + talk*0.8*Math.sin(t*6.1)) * Math.PI/180;
   const dy  = 4*Math.sin(t*0.9) - talk*3*Math.sin(t*5.2);
-  const sc  = 1 + 0.006*Math.sin(t*1.2);
+  const sc  = 1 + (0.006 + 0.002*Math.sin(t*0.23)) * Math.sin(t*(1.2 + 0.15*Math.sin(t*0.11)));
 
   // 自研 rig 参数
   const dancing = (cur === 'dance' || cur === 'transform');
@@ -716,7 +716,7 @@ function frame(now) {
   idleNow.tilt += (idleTarget.tilt - idleNow.tilt) * ease;
   idleNow.lean += (idleTarget.lean - idleNow.lean) * ease;
 
-  wp.lean = idleNow.lean + 3.4 * Math.sin(t * 0.52) * (dancing ? 1.9 : 1);
+  wp.lean = idleNow.lean + 3.4 * Math.sin(t * 0.52) * (dancing ? 1.9 : 1) + talk * 1.7;
   wp.headTurn = idleNow.turn + 3.0 * Math.sin(t * 0.43) + talk * 1.6 * Math.sin(t * 5.6) + (dancing ? 4 * Math.sin(t * 5.4) : 0);
   wp.headTilt = idleNow.tilt + 0.9 * Math.sin(t * 0.61) + (dancing ? 2.2 * Math.sin(t * 5.4) : 0);
   wp.headNod  = talk * 1.5 * Math.sin(t * 7.1) + 0.8 * Math.sin(t * 1.35);
