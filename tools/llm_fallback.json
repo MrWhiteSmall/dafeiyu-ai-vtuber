@@ -1,0 +1,19 @@
+{
+    "port": 8787,
+    "first_byte_timeout": 8,
+    "log_file": "../log/llm_proxy.log",
+    "providers": [
+        {
+            "name": "deepseek",
+            "api": "https://api.deepseek.com/v1",
+            "model": "deepseek-chat",
+            "env": "DEEPSEEK_API_KEY"
+        },
+        {
+            "name": "qwen",
+            "api": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            "model": "qwen-flash",
+            "env": "DASHSCOPE_KEY"
+        }
+    ]
+}

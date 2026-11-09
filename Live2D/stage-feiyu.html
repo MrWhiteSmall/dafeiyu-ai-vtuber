@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>新形象 · 海底大厅 · 横屏（动作版）</title>
+<style>
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#081b35}
+body{display:grid;place-items:center}
+#stage{position:absolute;width:1920px;height:1080px;overflow:hidden;isolation:isolate;transform-origin:center center;
+  background:#102e51 url('./assets/aquarium-landscape-20261028.png') center/cover no-repeat}
+#avatar-wrap{position:absolute;left:430px;bottom:-40px;width:1000px;height:1060px;z-index:2}
+#avatar{width:100%;height:100%;display:block;filter:drop-shadow(0 18px 40px rgba(0,20,40,.45))}
+#ability{position:absolute;right:46px;top:50%;transform:translateY(-50%);width:470px;padding:26px 26px 22px;z-index:6;
+  border-radius:28px;background:linear-gradient(160deg,rgba(6,30,56,.72),rgba(4,18,36,.82));
+  border:1px solid rgba(120,200,255,.28);box-shadow:0 18px 48px rgba(0,12,28,.45),inset 0 1px 0 rgba(180,230,255,.18);
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  font-family:"Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;opacity:0;transition:opacity .8s ease}
+#ability.show{opacity:1}
+#ability .ah{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+#ability .ah b{font-size:34px;color:#eaf6ff;letter-spacing:1px;font-weight:800}
+#ability .ai-badge{margin-left:auto;font-size:19px;color:#9fdcff;border:1px solid rgba(140,215,255,.45);border-radius:999px;padding:3px 12px}
+.ab-item{display:flex;align-items:center;gap:14px;padding:11px 14px;border-radius:16px;transition:background .35s,transform .35s;margin-bottom:6px}
+.ab-item .ico{font-size:32px;width:42px;text-align:center}
+.ab-item .txt{display:flex;flex-direction:column;line-height:1.25}
+.ab-item .k{font-size:28px;color:#eaf6ff;font-weight:700}
+.ab-item .v{font-size:22px;color:#a8d6f5;margin-top:2px}
+.ab-item.on{background:linear-gradient(90deg,rgba(80,180,255,.24),rgba(80,180,255,.06));
+  box-shadow:inset 0 0 0 1px rgba(130,215,255,.35),0 0 26px rgba(60,170,255,.18);transform:translateX(-6px)}
+#ability .af{margin-top:14px;padding-top:14px;border-top:1px dashed rgba(120,200,255,.22);font-size:20px;color:#88bfe4;text-align:center}
+#ai-label{position:absolute;left:40px;top:34px;z-index:7;padding:10px 22px;border-radius:999px;
+  background:rgba(4,18,36,.72);border:1px solid rgba(140,215,255,.45);color:#cdeaff;
+  font:600 26px/1 "Microsoft YaHei","PingFang SC",sans-serif;letter-spacing:1px;
+  text-shadow:0 2px 8px rgba(0,20,40,.6);backdrop-filter:blur(6px)}
+#ground{position:absolute;left:560px;bottom:6px;width:560px;height:70px;z-index:1;
+  background:radial-gradient(ellipse at center,rgba(0,20,40,.45),rgba(0,20,40,0) 70%);filter:blur(6px)}
+#act-tag{position:absolute;left:44px;bottom:196px;z-index:6;padding:7px 22px;border-radius:999px;
+  background:rgba(4,18,36,.55);border:1px solid rgba(140,215,255,.3);color:#bfe4ff;
+  font:600 21px/1 "Microsoft YaHei",sans-serif;letter-spacing:.5px;opacity:0;
+  transition:opacity .35s,color .35s,border-color .35s,box-shadow .35s}
+#act-tag.show{opacity:1}
+</style></head><body>
+<main id="stage" data-layout="clean-landscape">
+  <div id="ai-label">AI 虚拟主播 · 内容由 AI 实时生成</div>
+  <div id="ground"></div>
+  <div id="avatar-wrap"><canvas id="avatar" width="1000" height="1060"></canvas></div>
+  <div id="act-tag"></div>
+  <div id="ability"><div class="ah"><b>本鱼能干的</b><span class="ai-badge">AI 虚拟主播</span></div>
+    <div class="ab-item" data-i="0"><span class="ico">🎵</span><span class="txt"><span class="k">点歌</span><span class="v">发「点歌 起风了」</span></span></div>
+    <div class="ab-item" data-i="1"><span class="ico">📅</span><span class="txt"><span class="k">签到</span><span class="v">发「签到」攒积分</span></span></div>
+    <div class="ab-item" data-i="2"><span class="ico">🎲</span><span class="txt"><span class="k">抽签</span><span class="v">发「抽个签」看运势</span></span></div>
+    <div class="ab-item" data-i="3"><span class="ico">💬</span><span class="txt"><span class="k">聊天</span><span class="v">直接说话，AI 实时接</span></span></div>
+    <div class="ab-item" data-i="4"><span class="ico">👋</span><span class="txt"><span class="k">欢迎</span><span class="v">进场自动问好</span></span></div>
+    <div class="af">形象与声音均由 AI 实时生成</div>
+  </div>
+</main>
+<script src="./js/songroom-lipsync.js?v=20261028-lip1"></script>
+<script>
+const stage = document.getElementById('stage');
+function fitStage(){ stage.style.transform = `scale(${Math.min(innerWidth/1920, innerHeight/1080)})`; }
+addEventListener('resize', fitStage); fitStage();
+
+const cvs = document.getElementById('avatar');
+const ctx = cvs.getContext('2d');
+const W = cvs.width, H = cvs.height;
+const RIG = { size:[875,1200], eyes:[347,290,540,351], mouth:[428,364,464,389] };
+
+// ── 素材 ──
+const FILES = {
+  base:'base_t.png', closed:'eyes_closed_t.png', open:'mouth_open_t.png',
+  wave:'act-wave_t.png', heart:'act-heart_t.png', sign:'act-sign_t.png',
+  mic:'act-mic_t.png', listen:'act-listen_t.png', laptop:'act-laptop_t.png',
+  whale:'act-whale_t.png', calc:'act-calc_t.png'
+};
+const img = {};
+let loadedCount = 0;
+const load = (k, src) => new Promise(res => {
+  const i = new Image();
+  i.onload = () => { img[k] = i; loadedCount++; res(); };
+  i.onerror = () => res();
+  i.src = './assets/feiyu2/' + src;
+});
+Promise.all(Object.entries(FILES).map(([k, v]) => load(k, v))).then(() => {
+  buildPatches();
+  window.__feiyuLoaded = Object.keys(img).length;
+  console.log('[feiyu] loaded', window.__feiyuLoaded, 'of', Object.keys(FILES).length);
+});
+
+let eyesPatch = null, mouthPatch = null;
+function feather(canvas) {
+  const w = canvas.width, h = canvas.height;
+  const g = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.18, w/2, h/2, Math.max(w,h)*0.62);
+  g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(0.72,'rgba(0,0,0,1)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  const t = document.createElement('canvas'); t.width = w; t.height = h;
+  const tc = t.getContext('2d');
+  tc.drawImage(canvas, 0, 0);
+  tc.globalCompositeOperation = 'destination-in';
+  tc.fillStyle = g; tc.fillRect(0, 0, w, h);
+  return t;
+}
+function makePatch(srcImg, box, pad) {
+  const [x0,y0,x1,y1] = box;
+  const w = (x1-x0) + pad*2, h = (y1-y0) + pad*2;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const cc = c.getContext('2d');
+  cc.drawImage(srcImg, x0-pad, y0-pad, w, h, 0, 0, w, h);
+  return { canvas: feather(c), x: x0-pad, y: y0-pad, w, h };
+}
+function buildPatches() {
+  if (img.closed) eyesPatch  = makePatch(img.closed, RIG.eyes, 26);
+  if (img.open)   mouthPatch = makePatch(img.open,   RIG.mouth, 16);
+}
+
+// ── 动作表 ──
+// dur: 持续时间(秒)；tag: 提示文字（自动加括号）；c: 该动作的专属颜色；mouth: 是否允许说话嘴型叠加
+const ACTS = {
+  base:   { dur: 0,   tag: '',              c: '#bfe4ff', mouth: true  },
+  wave:   { dur: 3.2, tag: '挥手打招呼',     c: '#7fd8ff', mouth: false },
+  heart:  { dur: 3.0, tag: '比个心',         c: '#ff9ecd', mouth: false },
+  sign:   { dur: 4.0, tag: '摇签筒',         c: '#ffd479', mouth: false },
+  mic:    { dur: 12,  tag: '开唱',           c: '#c9a4ff', mouth: false },
+  listen: { dur: 6.0, tag: '戴耳机听歌',     c: '#8fe6d8', mouth: false },
+  laptop: { dur: 10,  tag: '敲电脑',         c: '#9fd0ff', mouth: false },
+  whale:  { dur: 9.0, tag: '摸一会儿鱼',     c: '#7fe0ff', mouth: false },
+  calc:   { dur: 8.0, tag: '算算 token 账',  c: '#ffb27a', mouth: false }
+};
+const IDLE_POOL = ['laptop', 'whale', 'calc'];
+
+let cur = 'base';       // 当前动作
+let prev = 'base';      // 上一个动作（用于淡入淡出）
+let fade = 1;           // 0→1 过渡进度
+let actionLeft = 0;     // 当前动作剩余秒数
+let nextIdle = 14 + Math.random()*20;
+
+const tagEl = document.getElementById('act-tag');
+function play(name, forceSec) {
+  if (!ACTS[name] || name === cur) return;
+  if (name !== 'base' && !img[name]) return;   // 素材没加载好就不切
+  prev = cur; cur = name; fade = 0;
+  actionLeft = forceSec || ACTS[name].dur || 0;
+  const a = ACTS[name];
+  if (a.tag) {
+    tagEl.textContent = '（' + a.tag + '）';
+    tagEl.style.color = a.c;
+    tagEl.style.borderColor = a.c + '88';
+    tagEl.style.boxShadow = '0 0 22px ' + a.c + '33';
+    tagEl.classList.add('show');
+  } else {
+    tagEl.classList.remove('show');
+  }
+}
+window.__feiyuPlay = play;
+
+// ── 表情/嘴型 ──
+let blink = 0, blinkT = 0, nextBlink = 2 + Math.random()*3;
+let lip = 0;
+function lipValue() {
+  const v = window.__songroomLipSync;
+  return typeof v === 'number' ? Math.max(0, Math.min(1, v)) : 0;
+}
+
+// ── 触发源 1：直接听弹幕（8888 是广播服务，可以多客户端） ──
+const RULES = [
+  [/签到|打卡/,              'heart'],
+  [/点歌|唱首|唱个|来一首|唱歌/, 'mic'],
+  [/抽签|抽个签|运势|签筒/,    'sign'],
+  [/欢迎|进入直播间|来啦|来了/, 'wave'],
+  [/耳机|听歌/,               'listen'],
+  [/token|算账|余额|欠费/,     'calc'],
+  [/摸鱼|累了|休息|下班/,      'whale'],
+  [/电脑|代码|写程序/,         'laptop']
+];
+
+function matchText(txt) {
+  if (!txt) return;
+  for (const [re, act] of RULES) {
+    if (re.test(txt)) { play(act); return act; }
+  }
+  return null;
+}
+
+let wsRetry = 0;
+function connectDanmaku() {
+  let ws;
+  try { ws = new WebSocket('ws://127.0.0.1:8888'); } catch (e) { return; }
+  ws.onopen = () => { wsRetry = 0; console.log('[feiyu] 弹幕已连接'); };
+  ws.onmessage = (e) => {
+    try {
+      const m = JSON.parse(e.data);
+      const t = String(m.Type);
+      const d = JSON.parse(m.Data || '{}');
+      if (t === '1') { matchText(d && d.Content); return; }   // 弹幕
+      if (t === '3') { play('wave'); return; }                 // 有人进场 → 挥手
+      if (t === '4') { play('wave'); return; }                 // 关注 → 挥手
+      if (t === '5') { play('heart'); return; }                // 礼物 → 比心
+    } catch (_) {}
+  };
+  ws.onclose = () => {
+    wsRetry = Math.min(wsRetry + 1, 8);
+    setTimeout(connectDanmaku, 2000 * wsRetry);
+  };
+  ws.onerror = () => { try { ws.close(); } catch (_) {} };
+}
+connectDanmaku();
+
+// ── 触发源 2：她说的话（兜底，比如"签到的小海星打卡成功"） ──
+let lastCaptionId = null;
+setInterval(async () => {
+  try {
+    const r = await fetch('http://127.0.0.1:5500/state', {cache:'no-store', signal: AbortSignal.timeout(900)});
+    const d = await r.json();
+    if (!d || !d.text) return;
+    const id = String(d.id) + ':' + String(d.at);
+    if (id === lastCaptionId) return;
+    lastCaptionId = id;
+    matchText(d.text);
+  } catch (e) {}
+}, 700);
+
+// ── 主循环 ──
+let last = performance.now();
+function drawOne(name, alpha, rot, dy, sc, tx, ty) {
+  const im = img[name] || img.base;
+  if (!im || alpha <= 0.001) return;
+  const k = H / RIG.size[1];
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(im, tx, ty, RIG.size[0]*k, H);
+  ctx.globalAlpha = 1;
+}
+
+function frame(now) {
+  const dt = Math.min(0.05, (now - last)/1000); last = now;
+  if (!img.base) { requestAnimationFrame(frame); return; }
+  const t = now/1000;
+  lip += (lipValue() - lip) * Math.min(1, dt*18);
+  const talk = lip > 0.05 ? 1 : 0;
+
+  // 动作计时
+  if (actionLeft > 0) {
+    actionLeft -= dt;
+    if (actionLeft <= 0) play('base');
+  } else {
+    nextIdle -= dt;
+    if (nextIdle <= 0 && cur === 'base') {
+      play(IDLE_POOL[Math.floor(Math.random()*IDLE_POOL.length)]);
+      nextIdle = 16 + Math.random()*22;
+    }
+  }
+  if (fade < 1) fade = Math.min(1, fade + dt/0.26);
+
+  // 摆动
+  const rot = (1.5*Math.sin(t*0.52) + talk*0.8*Math.sin(t*6.1)) * Math.PI/180;
+  const dy  = 4*Math.sin(t*0.9) - talk*3*Math.sin(t*5.2);
+  const sc  = 1 + 0.006*Math.sin(t*1.2);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(W/2, H); ctx.rotate(rot); ctx.scale(sc, sc); ctx.translate(-W/2, -H + dy);
+  const k = H / RIG.size[1];
+  const tx = (W - RIG.size[0]*k)/2, ty = 0;
+
+  drawOne(prev, 1 - fade, rot, dy, sc, tx, ty);
+  drawOne(cur,  fade,     rot, dy, sc, tx, ty);
+
+  // 眨眼/嘴型只在基础动作上叠加
+  const allowMouth = ACTS[cur] && ACTS[cur].mouth;
+  if (eyesPatch && blink > 0.01 && cur === 'base') {
+    ctx.globalAlpha = Math.min(1, blink);
+    ctx.drawImage(eyesPatch.canvas, tx + eyesPatch.x*k, ty + eyesPatch.y*k, eyesPatch.w*k, eyesPatch.h*k);
+    ctx.globalAlpha = 1;
+  }
+  if (mouthPatch && lip > 0.02 && allowMouth) {
+    ctx.globalAlpha = Math.min(0.98, lip*1.35);
+    ctx.drawImage(mouthPatch.canvas, tx + mouthPatch.x*k, ty + mouthPatch.y*k, mouthPatch.w*k, mouthPatch.h*k);
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+
+  // 眨眼
+  nextBlink -= dt;
+  if (nextBlink <= 0 && blinkT === 0) blinkT = 0.001;
+  if (blinkT > 0) {
+    blinkT += dt;
+    const d = 0.16;
+    blink = blinkT < d/2 ? blinkT/(d/2) : Math.max(0, 1 - (blinkT - d/2)/(d/2));
+    if (blinkT >= d) { blinkT = 0; blink = 0; nextBlink = 2 + Math.random()*3.5; }
+  }
+
+  const ab = document.getElementById('ability');
+  ab.style.opacity = ab.classList.contains('show') ? (talk ? 0.55 : 1) : 0;
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// 能力面板轮播
+const items = [...document.querySelectorAll('.ab-item')];
+setTimeout(() => document.getElementById('ability').classList.add('show'), 900);
+let ai = 0;
+function tick() {
+  items.forEach((e, i) => e.classList.toggle('on', i === ai));
+  ai = (ai + 1) % items.length;
+  setTimeout(tick, 2800);
+}
+setTimeout(tick, 900);
+
+window.__feiyuReady = true;
+</script>
+<script src="./js/stage-captions.js?v=caption1"></script>
+<script src="./js/stage-left.js?v=left1"></script>
+</body></html>

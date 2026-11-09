@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>新形象 · 海底大厅 · 横屏（动作版）</title>
+<style>
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#081b35}
+body{display:grid;place-items:center}
+#stage{position:absolute;width:1920px;height:1080px;overflow:hidden;isolation:isolate;transform-origin:center center;
+  background:#102e51 url('./assets/aquarium-landscape-20261028.png') center/cover no-repeat}
+#avatar-wrap{position:absolute;left:700px;bottom:300px;width:520px;height:552px;z-index:2}
+#avatar{width:100%;height:100%;display:block;filter:drop-shadow(0 18px 40px rgba(0,20,40,.45))}
+#ability{position:absolute;right:40px;top:392px;width:470px;padding:18px 22px 14px;z-index:6;
+  border-radius:28px;background:linear-gradient(160deg,rgba(6,30,56,.72),rgba(4,18,36,.82));
+  border:1px solid rgba(120,200,255,.28);box-shadow:0 18px 48px rgba(0,12,28,.45),inset 0 1px 0 rgba(180,230,255,.18);
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  font-family:"Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;opacity:0;transition:opacity .8s ease}
+#ability.show{opacity:1}
+#ability .ah{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
+#ability .ah b{font-size:28px;color:#eaf6ff;letter-spacing:1px;font-weight:800}
+#ability .ai-badge{margin-left:auto;font-size:17px;color:#9fdcff;border:1px solid rgba(140,215,255,.45);border-radius:999px;padding:3px 12px}
+.ab-item{display:flex;align-items:center;gap:12px;padding:7px 12px;border-radius:14px;transition:background .35s,transform .35s;margin-bottom:3px}
+.ab-item .ico{font-size:26px;width:34px;text-align:center}
+.ab-item .txt{display:flex;flex-direction:column;line-height:1.25}
+.ab-item .k{font-size:24px;color:#eaf6ff;font-weight:700}
+.ab-item .v{font-size:19px;color:#a8d6f5;margin-top:2px}
+.ab-item.on{background:linear-gradient(90deg,rgba(80,180,255,.24),rgba(80,180,255,.06));
+  box-shadow:inset 0 0 0 1px rgba(130,215,255,.35),0 0 26px rgba(60,170,255,.18);transform:translateX(-6px)}
+#ability .af{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(120,200,255,.22);font-size:17px;color:#88bfe4;text-align:center}
+#ai-label{position:absolute;left:40px;top:34px;z-index:7;padding:10px 22px;border-radius:999px;
+  background:rgba(4,18,36,.72);border:1px solid rgba(140,215,255,.45);color:#cdeaff;
+  font:600 26px/1 "Microsoft YaHei","PingFang SC",sans-serif;letter-spacing:1px;
+  text-shadow:0 2px 8px rgba(0,20,40,.6);backdrop-filter:blur(6px)}
+#ground{position:absolute;left:770px;bottom:292px;width:380px;height:44px;z-index:1;
+  background:radial-gradient(ellipse at center,rgba(0,20,40,.45),rgba(0,20,40,0) 70%);filter:blur(6px)}
+#act-tag{position:absolute;left:50%;top:92px;transform:translateX(-50%);z-index:8;padding:7px 22px;border-radius:999px;
+  background:rgba(4,18,36,.55);border:1px solid rgba(140,215,255,.3);color:#bfe4ff;
+  font:600 21px/1 "Microsoft YaHei",sans-serif;letter-spacing:.5px;opacity:0;
+  transition:opacity .35s,color .35s,border-color .35s,box-shadow .35s}
+#act-tag.show{opacity:1}
+
+#giftcard{position:absolute;left:44px;top:86px;z-index:7;width:372px;padding:13px 17px 11px;
+  border-radius:20px;background:linear-gradient(150deg,rgba(6,30,56,.82),rgba(10,48,86,.64));
+  border:1px solid rgba(140,215,255,.34);backdrop-filter:blur(9px);color:#dbeeff;
+  font:400 17px/1.4 "Microsoft YaHei","PingFang SC",sans-serif;
+  box-shadow:0 10px 34px rgba(0,16,34,.35)}
+#giftcard h4{margin:0 0 7px;font-size:19px;font-weight:700;letter-spacing:1px;color:#eaf7ff;
+  display:flex;align-items:center;gap:8px}
+#giftcard h4 b{display:inline-block;padding:2px 8px;border-radius:999px;font-size:13px;font-weight:600;
+  color:#0b1e30;background:linear-gradient(90deg,#8fe3ff,#c9a4ff)}
+#giftcard .row{display:flex;align-items:center;gap:7px;margin:3px 0;padding:3px 8px;font-size:16px;
+  border-radius:9px;opacity:.58;transition:all .38s ease}
+#giftcard .row.on{opacity:1;background:linear-gradient(90deg,rgba(120,190,255,.22),rgba(120,190,255,.03));
+  transform:translateX(5px);box-shadow:inset 0 0 0 1px rgba(140,215,255,.26)}
+#giftcard .row i{font-style:normal;color:#9fd8ff;min-width:138px}
+#giftcard .row em{font-style:normal;color:#ffd479}
+#giftcard .row.on em{color:#ffe9b3;text-shadow:0 0 14px rgba(255,212,121,.5)}
+#giftcard .foot{margin-top:7px;font-size:13px;color:#8fb6d6}
+
+#giftbar{position:absolute;left:44px;top:330px;z-index:7;width:372px;padding:12px 16px 13px;
+  border-radius:18px;background:linear-gradient(150deg,rgba(6,30,56,.8),rgba(10,48,86,.6));
+  border:1px solid rgba(140,215,255,.3);backdrop-filter:blur(9px);color:#dbeeff;
+  font:400 15px/1.35 "Microsoft YaHei","PingFang SC",sans-serif;
+  box-shadow:0 10px 30px rgba(0,16,34,.32)}
+#giftbar .gt{display:flex;align-items:center;justify-content:space-between;
+  font-size:16px;color:#eaf7ff;font-weight:700;margin-bottom:8px}
+#giftbar .gt b{color:#ffd479;font-weight:800;letter-spacing:.5px}
+#giftbar .track{height:14px;border-radius:999px;background:rgba(8,26,48,.85);overflow:hidden;
+  box-shadow:inset 0 1px 3px rgba(0,10,24,.6)}
+#giftbar .fill{height:100%;width:0%;border-radius:999px;
+  background:linear-gradient(90deg,#8fe3ff,#ffd479,#ff9ecd);
+  transition:width .5s ease;box-shadow:0 0 16px rgba(255,212,121,.5)}
+#giftbar.full .fill{animation:gpulse .9s infinite alternate}
+#giftbar.hint{box-shadow:0 0 0 2px rgba(255,212,121,.55),0 10px 26px rgba(0,12,28,.45)}
+#giftbar.hint .fill{animation:gpulse .6s infinite alternate}
+@keyframes gpulse{from{filter:brightness(1)}to{filter:brightness(1.5)}}
+#giftbar .gk{margin-top:7px;font-size:13px;color:#8fb6d6;display:flex;justify-content:space-between;gap:8px}
+
+#tvwrap{position:absolute;right:40px;top:22px;z-index:6;width:520px;padding:12px 12px 9px;border-radius:18px;
+  background:linear-gradient(160deg,rgba(64,40,24,.9),rgba(28,18,12,.94));
+  border:2px solid rgba(255,206,140,.45);box-shadow:0 14px 34px rgba(0,10,24,.55),inset 0 0 0 1px rgba(255,220,170,.18)}
+#tv{width:100%;height:292px;display:block;border-radius:9px;background:#0a0f18;object-fit:cover}
+#tvwrap .tvl{display:flex;justify-content:space-between;align-items:center;margin-top:7px;
+  font:600 17px/1 "Microsoft YaHei",sans-serif;color:#ffd8a8}
+#tvwrap .tvl span:last-child{color:#b99a76;font-weight:400}
+
+#actpanel{position:absolute;left:50%;bottom:184px;transform:translateX(-50%);padding:8px 14px 9px;z-index:6;border-radius:20px;
+  background:linear-gradient(160deg,rgba(6,30,56,.78),rgba(4,18,36,.86));
+  border:1px solid rgba(150,215,255,.3);box-shadow:0 14px 36px rgba(0,12,28,.45);
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  font-family:"Microsoft YaHei","PingFang SC",sans-serif}
+#actpanel .ah2{display:flex;align-items:baseline;justify-content:center;gap:9px;margin-bottom:7px}
+#actpanel .ah2 b{font-size:21px;color:#eaf6ff;font-weight:800;letter-spacing:1px}
+#actpanel .ah2 i{font-style:normal;font-size:15px;color:#8fc6ea}
+#actpanel .grid{display:flex;gap:10px}
+#actpanel .cmd{display:flex;align-items:center;justify-content:center;min-width:112px;padding:8px 16px;border-radius:13px;
+  background:rgba(90,170,255,.1);border:1px solid rgba(130,205,255,.18);transition:background .3s,transform .3s}
+#actpanel .cmd .cn{font-size:19px;color:#eaf6ff;font-weight:700}
+#actpanel .cmd .cc{font-size:13px;color:#9fd0ee}
+#actpanel .cmd.on{background:linear-gradient(90deg,rgba(255,212,121,.24),rgba(255,212,121,.06));
+  border-color:rgba(255,212,121,.55);box-shadow:0 0 18px rgba(255,212,121,.2);transform:translateY(-3px)}
+
+#paintshow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);z-index:20;  width:1152px;max-width:60vw;opacity:0;pointer-events:none;
+  transition:opacity .45s ease,transform .45s ease;padding:14px;border-radius:22px;
+  background:linear-gradient(160deg,rgba(255,246,228,.97),rgba(255,232,196,.94));
+  box-shadow:0 26px 70px rgba(0,8,20,.6),0 0 0 6px rgba(255,214,150,.35)}
+#paintshow.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#paintshow img{width:100%;max-height:800px;object-fit:contain;display:block;border-radius:14px}
+#paintshow .cap{margin-top:10px;text-align:center;font:700 26px/1.2 "Microsoft YaHei",sans-serif;
+  color:#5b3a1c;letter-spacing:1px}
+#paintshow .cap em{font-style:normal;color:#c46a1a}
+#stage-caption{bottom:20px !important;max-width:1180px !important}
+</style></head><body>
+<main id="stage" data-layout="clean-landscape">
+  <div id="ai-label">AI 虚拟主播 · 内容由 AI 实时生成</div>
+  <div id="giftcard">
+    <h4>礼物联动 <b>刷到就有动作</b></h4>
+    <div class="row"><i>小心心 / 玫瑰</i>→ <em>比个心</em></div>
+    <div class="row"><i>奶茶 / 蛋糕</i>→ <em>端碗干饭</em></div>
+    <div class="row"><i>火箭 / 嘉年华</i>→ <em>撒花欢呼</em></div>
+    <div class="row"><i>任意礼物</i>→ <em>双手收下</em></div>
+    <div class="row"><i>连击加倍</i>→ <em>触手数数</em></div>
+    <div class="foot">动作由形象实时切换，不需要额外操作</div>
+  </div>
+  <div id="giftbar">
+    <div class="gt"><span>礼物进度 · 满 20 份</span><b id="gb-count">0 / 20</b></div>
+    <div class="track"><div class="fill" id="gb-fill"></div></div>
+    <div class="gk"><span>攒满就让大章鱼现场画一张祝福画</span><span id="gb-tip">继续攒</span></div>
+  </div>
+  <div id="tvwrap">
+    <video id="tv" muted playsinline preload="auto"></video>
+    <div class="tvl"><span id="tv-title">小电视 · 老动画</span><span id="tv-no">01</span></div>
+  </div>
+  <div id="paintshow"><img id="paint-img" alt=""><div class="cap" id="paint-cap"></div></div>
+  <div id="actpanel">
+    <div class="ah2"><b>特殊指令</b><i>在弹幕里发这几个词就行</i></div>
+    <div class="grid">
+      <div class="cmd" data-act="dance"><span class="cn">跳个舞</span></div>
+      <div class="cmd" data-act="transform"><span class="cn">变身</span></div>
+      <div class="cmd" data-act="lieflat"><span class="cn">躺平</span></div>
+      <div class="cmd" data-act="jobhunt"><span class="cn">找工作</span></div>
+    </div>
+  </div>
+  <div id="ground"></div>
+  <div id="avatar-wrap"><canvas id="avatar" width="1000" height="1060"></canvas></div>
+  <div id="act-tag"></div>
+  <div id="ability"><div class="ah"><b>本章鱼能干的</b><span class="ai-badge">AI 虚拟主播</span></div>
+    <div class="ab-item" data-i="0"><span class="ico">🎵</span><span class="txt"><span class="k">点歌</span><span class="v">发「点歌 起风了」</span></span></div>
+    <div class="ab-item" data-i="1"><span class="ico">📅</span><span class="txt"><span class="k">签到</span><span class="v">发「签到」攒积分</span></span></div>
+    <div class="ab-item" data-i="2"><span class="ico">🎲</span><span class="txt"><span class="k">抽签</span><span class="v">发「抽个签」看运势</span></span></div>
+    <div class="ab-item" data-i="3"><span class="ico">💬</span><span class="txt"><span class="k">聊天</span><span class="v">直接说话，AI 实时接</span></span></div>
+    <div class="ab-item" data-i="4"><span class="ico">👋</span><span class="txt"><span class="k">欢迎</span><span class="v">进场自动问好</span></span></div>
+    <div class="af">形象与声音均由 AI 实时生成</div>
+  </div>
+</main>
+<script src="./js/songroom-lipsync.js?v=20261028-lip1"></script>
+<script>
+const stage = document.getElementById('stage');
+function fitStage(){ stage.style.transform = `scale(${Math.min(innerWidth/1920, innerHeight/1080)})`; }
+addEventListener('resize', fitStage); fitStage();
+
+const cvs = document.getElementById('avatar');
+const ctx = cvs.getContext('2d');
+const W = cvs.width, H = cvs.height;
+const RIG = { size:[875,1200], eyes:[348,222,552,292], mouth:[424,303,470,336] };
+
+// ── 素材 ──
+const FILES = {
+  base:'base_t.png', closed:'eyes_closed_t.png', open:'mouth_open_t.png',
+  wave:'act-wave_t.png', heart:'act-heart_t.png', sign:'act-sign_t.png',
+  mic:'act-mic_t.png', listen:'act-listen_t.png', laptop:'act-laptop_t.png',
+  whale:'whale_t.png', calc:'act-calc_t.png',
+  bowl:'bowl_t.png', gift:'gift_t.png', cheer:'cheer_t.png', count:'count_t.png',
+  paint:'pose-paint_t.png', show:'pose-show_t.png', watchtv:'pose-watchtv_t.png'
+};
+// 多帧小片段：每段 4 张，循环播放做出连贯动作
+const CLIPS = {
+  dance:    ['clip-dance-1_t.png','clip-dance-2_t.png','clip-dance-3_t.png','clip-dance-4_t.png'],
+  transform:['clip-transform-1_t.png','clip-transform-2_t.png','clip-transform-3_t.png','clip-transform-4_t.png'],
+  lieflat:  ['clip-lieflat-1_t.png','clip-lieflat-2_t.png','clip-lieflat-3_t.png','clip-lieflat-4_t.png'],
+  jobhunt:  ['clip-jobhunt-1_t.png','clip-jobhunt-2_t.png','clip-jobhunt-3_t.png','clip-jobhunt-4_t.png']
+};
+const img = {};
+let loadedCount = 0;
+const load = (k, src) => new Promise(res => {
+  const i = new Image();
+  i.onload = () => { img[k] = i; loadedCount++; res(); };
+  i.onerror = () => res();
+  i.src = './assets/octo/' + src;
+});
+Promise.all(Object.entries(FILES).map(([k, v]) => load(k, v))).then(() => {
+  buildPatches();
+  window.__feiyuLoaded = Object.keys(img).length;
+  console.log('[feiyu] loaded', window.__feiyuLoaded, 'of', Object.keys(FILES).length);
+});
+
+// 片段帧单独加载，不阻塞主形象
+Object.entries(CLIPS).forEach(([k, arr]) => {
+  arr.forEach((src, i) => load(k + '_' + i, src));
+});
+
+let eyesPatch = null, mouthPatch = null;
+function feather(canvas) {
+  const w = canvas.width, h = canvas.height;
+  const g = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.18, w/2, h/2, Math.max(w,h)*0.62);
+  g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(0.72,'rgba(0,0,0,1)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  const t = document.createElement('canvas'); t.width = w; t.height = h;
+  const tc = t.getContext('2d');
+  tc.drawImage(canvas, 0, 0);
+  tc.globalCompositeOperation = 'destination-in';
+  tc.fillStyle = g; tc.fillRect(0, 0, w, h);
+  return t;
+}
+function makePatch(srcImg, box, pad) {
+  const [x0,y0,x1,y1] = box;
+  const w = (x1-x0) + pad*2, h = (y1-y0) + pad*2;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const cc = c.getContext('2d');
+  cc.drawImage(srcImg, x0-pad, y0-pad, w, h, 0, 0, w, h);
+  return { canvas: feather(c), x: x0-pad, y: y0-pad, w, h };
+}
+function buildPatches() {
+  if (img.closed) eyesPatch  = makePatch(img.closed, RIG.eyes, 26);
+  if (img.open)   mouthPatch = makePatch(img.open,   RIG.mouth, 16);
+}
+
+// ── 动作表 ──
+// dur: 持续时间(秒)；tag: 提示文字（自动加括号）；c: 该动作的专属颜色；mouth: 是否允许说话嘴型叠加
+const ACTS = {
+  base:   { dur: 0,   tag: '',              c: '#bfe4ff', mouth: true  },
+  wave:   { dur: 3.2, tag: '挥手打招呼',     c: '#7fd8ff', mouth: false },
+  heart:  { dur: 3.0, tag: '比个心',         c: '#ff9ecd', mouth: false },
+  sign:   { dur: 4.0, tag: '摇签筒',         c: '#ffd479', mouth: false },
+  mic:    { dur: 12,  tag: '开唱',           c: '#c9a4ff', mouth: false },
+  listen: { dur: 6.0, tag: '戴耳机听歌',     c: '#8fe6d8', mouth: false },
+  laptop: { dur: 10,  tag: '敲电脑',         c: '#9fd0ff', mouth: false },
+  whale:  { dur: 9.0, tag: '摸一会儿鱼',     c: '#7fe0ff', mouth: false },
+  calc:   { dur: 8.0, tag: '算算 token 账',  c: '#ffb27a', mouth: false },
+  bowl:   { dur: 12,  tag: '端碗干饭',       c: '#ffd9a0', mouth: false },
+  gift:   { dur: 4.5, tag: '收礼物',         c: '#ffc45e', mouth: false },
+  cheer:  { dur: 5.0, tag: '撒花欢呼',       c: '#ff8fb1', mouth: false },
+  count:  { dur: 3.0, tag: '数一数连击',       c: '#8ef0c0', mouth: false },
+  paint:  { dur: 60,  tag: '画张祝福画',       c: '#ffd9a0', mouth: false },
+  show:   { dur: 6.0, tag: '把画举给你们看',   c: '#ffe08a', mouth: false },
+  watchtv:{ dur: 11,  tag: '看会儿小电视',     c: '#a8e6ff', mouth: false },
+  dance:  { dur: 8.0, tag: '跳个章鱼舞',       c: '#ff9ecd', mouth: false },
+  transform:{ dur: 7.0, tag: '变身！',         c: '#ffb347', mouth: false },
+  lieflat:{ dur: 9.0, tag: '躺平了',           c: '#b8cde3', mouth: false },
+  jobhunt:{ dur: 9.0, tag: '找工作又被拒',     c: '#c9a4ff', mouth: false }
+};
+const IDLE_POOL = ['laptop', 'whale', 'calc', 'bowl', 'watchtv'];
+
+let cur = 'base';       // 当前动作
+let prev = 'base';      // 上一个动作（用于淡入淡出）
+let fade = 1;           // 0→1 过渡进度
+let actionLeft = 0;     // 当前动作剩余秒数
+let nextIdle = 14 + Math.random()*20;
+let seqStart = performance.now();   // 多帧片段起始时间
+
+const tagEl = document.getElementById('act-tag');
+function play(name, forceSec) {
+  if (!ACTS[name] || name === cur) return;
+  if (name !== 'base' && !img[name] && !CLIPS[name]) return;   // 素材没加载好就不切
+  prev = cur; cur = name; fade = 0;
+  seqStart = performance.now();
+  actionLeft = forceSec || ACTS[name].dur || 0;
+  const a = ACTS[name];
+  if (a.tag) {
+    tagEl.textContent = '（' + a.tag + '）';
+    tagEl.style.color = a.c;
+    tagEl.style.borderColor = a.c + '88';
+    tagEl.style.boxShadow = '0 0 22px ' + a.c + '33';
+    tagEl.classList.add('show');
+  } else {
+    tagEl.classList.remove('show');
+  }
+  // 动作指令面板高亮（四条多帧彩蛋）
+  try { if (window.__actHint) window.__actHint(name); } catch (e) {}
+}
+window.__feiyuPlay = play;
+
+// 动作指令面板高亮（跳个舞/变身/躺平/找工作）
+(function () {
+  const cmds = Array.from(document.querySelectorAll('#actpanel .cmd'));
+  let clearT = null;
+  window.__actHint = function (name) {
+    cmds.forEach(c => c.classList.toggle('on', c.dataset.act === name));
+    if (clearT) clearTimeout(clearT);
+    clearT = setTimeout(() => cmds.forEach(c => c.classList.remove('on')), 9000);
+  };
+})();
+
+// ── 表情/嘴型 ──
+let blink = 0, blinkT = 0, nextBlink = 2 + Math.random()*3;
+let lip = 0;
+function lipValue() {
+  const v = window.__songroomLipSync;
+  return typeof v === 'number' ? Math.max(0, Math.min(1, v)) : 0;
+}
+
+// ── 触发源 1：直接听弹幕（8888 是广播服务，可以多客户端） ──
+const RULES = [
+  [/签到|打卡/,              'heart'],
+  [/点歌|唱首|唱个|来一首|唱歌/, 'mic'],
+  [/抽签|抽个签|运势|签筒/,    'sign'],
+  [/欢迎|进入直播间|来啦|来了/, 'wave'],
+  [/耳机|听歌/,               'listen'],
+  [/token|算账|余额|欠费/,     'calc'],
+  [/摸鱼|累了|休息|下班/,      'whale'],
+  [/电脑|代码|写程序/,         'laptop'],
+  [/跳个舞|跳舞|跳一段|蹦一个/,  'dance'],
+  [/变身/,                    'transform'],
+  [/躺平|摆烂|不想动/,          'lieflat'],
+  [/找工作|面试|投简历|简历/,    'jobhunt'],
+  [/看电视|小电视|动画片/,       'watchtv']
+];
+
+// 私密管理口令：只有主播知道，不在 UI 上露出。用来现场测绘画能力。
+const ADMIN_DRAW = /^\s*admin\s+draw\b/i;
+// 观众直接讨画（没攒够礼物时只给提示，不真画）
+const ASK_DRAW = /画个画|画一张|给我画|帮我画|画幅画|来张画|能不能画/;
+
+function matchText(txt) {
+  if (!txt) return;
+  // ① 私密口令：直接开画，不看礼物进度
+  if (ADMIN_DRAW.test(txt)) {
+    try { if (window.__paintNow) window.__paintNow('主播'); } catch (e) {}
+    return 'paint';
+  }
+  // ② 观众讨画但进度没满：画笔动作 + 进度条闪一下 + 头顶提示
+  if (ASK_DRAW.test(txt)) {
+    try {
+      if (window.__giftCount && window.__giftCount() >= 20) { window.__paintNow && window.__paintNow('观众'); return 'paint'; }
+      if (window.__paintHint) window.__paintHint();
+    } catch (e) {}
+    play('paint', 4);
+    return 'paint';
+  }
+  for (const [re, act] of RULES) {
+    if (re.test(txt)) { play(act); return act; }
+  }
+  return null;
+}
+
+window.__matchText = matchText;   // 调试/自测用
+let wsRetry = 0;
+function connectDanmaku() {
+  let ws;
+  try { ws = new WebSocket('ws://127.0.0.1:8888'); } catch (e) { return; }
+  ws.onopen = () => { wsRetry = 0; console.log('[feiyu] 弹幕已连接'); };
+  ws.onmessage = (e) => {
+    try {
+      const m = JSON.parse(e.data);
+      const t = String(m.Type);
+      const d = JSON.parse(m.Data || '{}');
+      if (t === '1') { matchText(d && d.Content); return; }   // 弹幕
+      if (t === '3') { play('wave'); return; }                 // 有人进场 → 挥手
+      if (t === '4') { play('wave'); return; }                 // 关注 → 挥手
+      if (t === '5') {                                        // 礼物 → 按类型分动作
+        const gname = String((d && d.GiftName) || '');
+        if (/火箭|跑车|飞机|嘉年华|浪漫|花园|城堡/.test(gname))      play('cheer');
+        else if (/奶茶|蛋糕|汉堡|炸鸡|啤酒|饭|咖啡|冰淇淋/.test(gname)) play('bowl');
+        else if (/心|玫瑰|花|棒棒糖|点赞/.test(gname))               play('heart');
+        else                                                     play('gift');
+        if (Number((d && d.RepeatCount) || 0) > 1) play('count', 2.6);
+        try { giftTick(d); } catch (_) {}
+        return;
+      }
+    } catch (_) {}
+  };
+  ws.onclose = () => {
+    wsRetry = Math.min(wsRetry + 1, 8);
+    setTimeout(connectDanmaku, 2000 * wsRetry);
+  };
+  ws.onerror = () => { try { ws.close(); } catch (_) {} };
+}
+connectDanmaku();
+
+// ── 触发源 2：她说的话（兜底，比如"签到的小海星打卡成功"） ──
+let lastCaptionId = null;
+setInterval(async () => {
+  try {
+    const r = await fetch('http://127.0.0.1:5500/state', {cache:'no-store', signal: AbortSignal.timeout(900)});
+    const d = await r.json();
+    if (!d || !d.text) return;
+    const id = String(d.id) + ':' + String(d.at);
+    if (id === lastCaptionId) return;
+    lastCaptionId = id;
+    matchText(d.text);
+  } catch (e) {}
+}, 700);
+
+// ── 主循环 ──
+let last = performance.now();
+function drawOne(name, alpha, rot, dy, sc, tx, ty) {
+  let im = null;
+  if (CLIPS[name]) {
+    const arr = CLIPS[name];
+    const idx = Math.floor((performance.now() - seqStart) / 620) % arr.length;
+    im = img[name + '_' + idx];
+  } else {
+    im = img[name];
+  }
+  if (!im) im = img.base;
+  if (!im || alpha <= 0.001) return;
+  const k = H / RIG.size[1];
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(im, tx, ty, RIG.size[0]*k, H);
+  ctx.globalAlpha = 1;
+}
+
+function frame(now) {
+  const dt = Math.min(0.05, (now - last)/1000); last = now;
+  if (!img.base) { requestAnimationFrame(frame); return; }
+  const t = now/1000;
+  lip += (lipValue() - lip) * Math.min(1, dt*18);
+  const talk = lip > 0.05 ? 1 : 0;
+
+  // 动作计时
+  if (actionLeft > 0) {
+    actionLeft -= dt;
+    if (actionLeft <= 0) play('base');
+  } else {
+    nextIdle -= dt;
+    if (nextIdle <= 0 && cur === 'base') {
+      play(IDLE_POOL[Math.floor(Math.random()*IDLE_POOL.length)]);
+      nextIdle = 16 + Math.random()*22;
+    }
+  }
+  if (fade < 1) fade = Math.min(1, fade + dt/0.26);
+
+  // 摆动
+  const rot = (1.5*Math.sin(t*0.52) + talk*0.8*Math.sin(t*6.1)) * Math.PI/180;
+  const dy  = 4*Math.sin(t*0.9) - talk*3*Math.sin(t*5.2);
+  const sc  = 1 + 0.006*Math.sin(t*1.2);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(W/2, H); ctx.rotate(rot); ctx.scale(sc, sc); ctx.translate(-W/2, -H + dy);
+  const k = H / RIG.size[1];
+  const tx = (W - RIG.size[0]*k)/2, ty = 0;
+
+  drawOne(prev, 1 - fade, rot, dy, sc, tx, ty);
+  drawOne(cur,  fade,     rot, dy, sc, tx, ty);
+
+  // 眨眼/嘴型只在基础动作上叠加
+  const allowMouth = ACTS[cur] && ACTS[cur].mouth;
+  if (eyesPatch && blink > 0.01 && cur === 'base') {
+    ctx.globalAlpha = Math.min(1, blink);
+    ctx.drawImage(eyesPatch.canvas, tx + eyesPatch.x*k, ty + eyesPatch.y*k, eyesPatch.w*k, eyesPatch.h*k);
+    ctx.globalAlpha = 1;
+  }
+  if (mouthPatch && lip > 0.02 && allowMouth) {
+    ctx.globalAlpha = Math.min(0.98, lip*1.35);
+    ctx.drawImage(mouthPatch.canvas, tx + mouthPatch.x*k, ty + mouthPatch.y*k, mouthPatch.w*k, mouthPatch.h*k);
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+
+  // 眨眼
+  nextBlink -= dt;
+  if (nextBlink <= 0 && blinkT === 0) blinkT = 0.001;
+  if (blinkT > 0) {
+    blinkT += dt;
+    const d = 0.16;
+    blink = blinkT < d/2 ? blinkT/(d/2) : Math.max(0, 1 - (blinkT - d/2)/(d/2));
+    if (blinkT >= d) { blinkT = 0; blink = 0; nextBlink = 2 + Math.random()*3.5; }
+  }
+
+  const ab = document.getElementById('ability');
+  ab.style.opacity = ab.classList.contains('show') ? (talk ? 0.55 : 1) : 0;
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// 能力面板轮播
+const items = [...document.querySelectorAll('.ab-item')];
+setTimeout(() => document.getElementById('ability').classList.add('show'), 900);
+let ai = 0;
+function tick() {
+  items.forEach((e, i) => e.classList.toggle('on', i === ai));
+  ai = (ai + 1) % items.length;
+  setTimeout(tick, 2800);
+}
+setTimeout(tick, 900);
+
+window.__feiyuReady = true;
+</script>
+
+<script>
+// ── 礼物进度条 + 祝福画 ──
+const GOAL = 20;
+const PAINT_API = 'http://127.0.0.1:8899';
+let giftCount = 0;
+let painting = false;
+
+const gbCount = document.getElementById('gb-count');
+const gbFill = document.getElementById('gb-fill');
+const gbBar = document.getElementById('giftbar');
+const gbTip = document.getElementById('gb-tip');
+
+function renderGiftBar() {
+  const p = Math.min(100, giftCount / GOAL * 100);
+  gbFill.style.width = p + '%';
+  gbCount.textContent = giftCount + ' / ' + GOAL;
+  gbBar.classList.toggle('full', giftCount >= GOAL - 3);
+  gbTip.textContent = painting ? '正在画…' : (giftCount >= GOAL - 3 ? '快满了！' : '继续攒');
+}
+
+function giftTick(d) {
+  const n = Math.max(1, Number((d && d.GiftCount) || 1));
+  giftCount += n;
+  renderGiftBar();
+  if (giftCount >= GOAL && !painting) {
+    const user = String((d && d.User && d.User.Nickname) || '观众');
+    startPaint(user);
+  }
+}
+renderGiftBar();
+
+const paintBox = document.getElementById('paintshow');
+const paintImg = document.getElementById('paint-img');
+const paintCap = document.getElementById('paint-cap');
+
+function showPainting(url, theme, who, seconds) {
+  paintImg.src = url;
+  paintCap.innerHTML = '大章鱼给 <em>' + (who || '大家') + '</em> 画的祝福画 · <em>' + (theme || '平安喜乐') + '</em>';
+  paintBox.classList.add('show');
+  setTimeout(() => paintBox.classList.remove('show'), 3200);
+}
+
+async function startPaint(user, opts) {
+  if (painting) return;
+  const reset = !opts || opts.reset !== false;   // 主播私密测试不清进度
+  painting = true;
+  if (reset) giftCount = 0;
+  renderGiftBar();
+  play('paint', 55);
+  const t0 = Date.now();
+  try {
+    const r = await fetch(PAINT_API + '/paint?user=' + encodeURIComponent(user || '观众'),
+                          {cache: 'no-store'});
+    const d = await r.json();
+    if (!d || !d.ok) throw new Error((d && d.error) || '生成失败');
+    const info = d.data || {};
+    play('show', 7);
+    setTimeout(() => showPainting(info.url, info.theme, user, info.seconds), 900);
+    console.log('[paint] 完成', ((Date.now() - t0) / 1000).toFixed(1) + 's', info);
+  } catch (e) {
+    console.warn('[paint] 失败', e && e.message);
+    play('base');
+  } finally {
+    painting = false;
+    renderGiftBar();
+  }
+}
+window.__paintNow = startPaint;
+window.__giftTick = giftTick;
+window.__giftCount = () => giftCount;
+// 观众没攒够就要画时：进度条闪一下 + 提示还差几份
+window.__paintHint = function () {
+  const left = Math.max(1, GOAL - giftCount);
+  gbBar.classList.add('hint');
+  const old = gbTip.textContent;
+  gbTip.textContent = '还差 ' + left + ' 份就开画';
+  setTimeout(() => {
+    gbBar.classList.remove('hint');
+    gbTip.textContent = old || '继续攒';
+  }, 4500);
+};
+</script>
+
+<script>
+// ── 右上角小电视：循环放老动画（静音） ──
+(function(){
+  const v = document.getElementById('tv');
+  const titleEl = document.getElementById('tv-title');
+  const noEl = document.getElementById('tv-no');
+  let list = [], idx = -1, ready = false;
+
+  function fit(){ return; }
+
+  async function boot(){
+    try {
+      const r = await fetch('./media/cartoons/manifest.json?t=' + Date.now(), {cache:'no-store'});
+      list = await r.json();
+      if (!Array.isArray(list) || !list.length) return;
+      ready = true;
+      next(true);
+    } catch (e) { console.warn('[tv] 清单读取失败', e && e.message); }
+  }
+
+  function next(first){
+    if (!ready) return;
+    let n = Math.floor(Math.random() * list.length);
+    if (list.length > 1 && n === idx) n = (n + 1) % list.length;
+    idx = n;
+    const item = list[idx];
+    v.src = './media/cartoons/' + encodeURIComponent(item.file);
+    v.muted = true;
+    v.play().catch(() => {});
+    titleEl.textContent = '小电视 · ' + (item.title || '老动画');
+    noEl.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(list.length).padStart(2, '0');
+    // 每次换片，顺手让她看一会儿电视
+    if (window.__feiyuPlay && first !== true) window.__feiyuPlay('watchtv', 9);
+  }
+
+  v.addEventListener('ended', () => next(false));
+  v.addEventListener('error', () => setTimeout(() => next(false), 3000));
+  boot();
+  // 40~90 秒换一集，避免一直同一段
+  setInterval(() => { if (!v.paused && v.currentTime > 0) return; next(false); }, 60000);
+})();
+</script>
+
+<script src="./js/stage-captions.js?v=caption1"></script>
+<script src="./js/stage-left.js?v=left1"></script>
+
+<script>
+(function(){
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#giftcard .row'));
+  if (!rows.length) return;
+  var i = 0;
+  function tick(){
+    rows.forEach(function(r, k){ r.classList.toggle('on', k === i); });
+    i = (i + 1) % rows.length;
+  }
+  tick();
+  setInterval(tick, 2400);
+})();
+</script>
+</body></html>

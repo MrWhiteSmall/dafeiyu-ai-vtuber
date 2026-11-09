@@ -1,0 +1,133 @@
+[tool.poetry]
+name = "ai-vtuber"
+version = "1.0.0"
+description = "AI Vtuber，结合ASR、LLM、TTS、SVC、SD等功能为一体的开源AI软件"
+authors = ["ikaros <327209194@qq.com>"]
+license = "GPL-3.0"
+readme = "README.md"
+
+# 安装的事实来源是 requirements/ 下的分组文件与 *.lock.txt（见 README「依赖分层」）。
+# 本文件只是把它镜像成 Poetry 依赖组，方便用 Poetry 工具链查看/安装；
+# 两处若不一致，以 requirements/ 为准。
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+# --- core：WebUI 与本地对话/播报主链路（requirements/core.txt） ---
+nicegui = "==3.18.0"
+fastapi = "==0.159.1"
+starlette = "==1.7.0"
+uvicorn = "==0.54.0"
+httpx = "==0.28.1"
+aiohttp = "==3.14.5"
+yarl = "==1.25.1"
+requests = "==2.34.2"
+openai = "==3.36.1"
+packaging = "==26.3"
+pydantic = ">=2.11,<3"
+numpy = "==2.2.6"
+loguru = "==0.7.3"
+schedule = "==1.2.2"
+edge-tts = ">=7.3.1"
+pydub = "==0.25.1"
+pygame = "==2.6.1"
+PyAudio = "==0.2.14"
+websockets = "==16.1.1"
+langid = "==1.1.6"
+profanity = "==1.1"
+pyahocorasick = "==2.3.1"
+pypinyin = "==0.55.0"
+jieba = "==0.42.1"
+pygtrans = "==1.6.2"
+colorlog = "==6.12.0"
+keyboard = "==0.13.5"
+SpeechRecognition = "==3.17.0"
+baidu-aip = "==4.16.13"
+chardet = "==7.7.0"
+# aiohttp/nicegui 的传递依赖，父约束只有下限，显式抬到最新
+multidict = "==7.1.0"
+async-timeout = "==5.0.1"
+docutils = "==0.23"
+
+# --- llm：云端/本地大模型 provider（requirements/llm.txt） ---
+[tool.poetry.group.llm]
+optional = true
+
+[tool.poetry.group.llm.dependencies]
+dashscope = "==1.14.1"
+google-generativeai = "==0.7.2"
+PyJWT = "==2.8.0"
+revTongYi = "==0.0.1.0"
+volcengine-python-sdk = { version = "==1.0.99", extras = ["ark"] }
+zhipuai = "==2.1.4.20230731"
+wenxinworkshop = { git = "https://gitee.com/ikaros-521/WenxinWorkshop-Python-SDK", rev = "12b863fca7ec1cdf969d73a04b50f66d2d24a878" }
+
+# --- tts：额外 TTS（requirements/tts.txt） ---
+[tool.poetry.group.tts]
+optional = true
+
+[tool.poetry.group.tts.dependencies]
+elevenlabs = "==0.2.8"
+azure-cognitiveservices-speech = "==1.35.0"
+gradio_client = "==2.7.2"
+
+# --- asr：本地语音识别（requirements/asr.txt） ---
+[tool.poetry.group.asr]
+optional = true
+
+[tool.poetry.group.asr.dependencies]
+funasr = "==1.1.3"
+faster-whisper = "==1.0.2"
+
+# --- platform：直播平台弹幕与逆向协议（requirements/platform.txt） ---
+# bilibili-api-python 17.4.2 起不再钉死 requests/httpx/aiohttp/brotli 上限，可与 core 合并解析，
+# lock 见 requirements/core+platform.lock.txt。登录 API 已换成异步的 login_v2。
+[tool.poetry.group.platform]
+optional = true
+
+[tool.poetry.group.platform.dependencies]
+bilibili-api-python = "==17.4.2"
+# blivedm 已改为内置源码（vendor/blivedm/），不再作为 pip 依赖：
+# 上游 1.1.2 钉死 aiohttp~=3.9.0 / yarl~=1.9.3，与 nicegui 3 互斥
+brotli = ">=1.1.0"
+TikTokLive = "==7.0.1"
+betterproto = "==2.0.0b1"
+playwright = "==1.64.0"
+pytchat = "==0.5.5"
+PySocks = "==1.7.1"
+emoji = "==2.16.0"
+websocket-client = "==1.8.0"
+protobuf = "==7.36.2"
+protobuf-inspector = "==0.2"
+
+# --- visual：数字人/绘图/桌面自动化（requirements/visual.txt） ---
+# opencv 5.x 要求 numpy>=2，与 core 的 numpy 1.26 互斥，故停在 4.x 末版
+[tool.poetry.group.visual]
+optional = true
+
+[tool.poetry.group.visual.dependencies]
+opencv-python = "==5.0.0.93"
+Pillow = "==12.3.0"
+pyvirtualcam = "==0.15.0"
+webuiapi = "==0.9.3"
+pyautogui = "==0.9.54"
+PyGetWindow = "==0.0.9"
+pyserial = "==3.5"
+
+# --- chat-with-file：文档问答（requirements/chat-with-file.txt） ---
+[tool.poetry.group.chat-with-file]
+optional = true
+
+[tool.poetry.group.chat-with-file.dependencies]
+faiss-cpu = "==1.15.1"
+PyPDF2 = "==3.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# tests/ 下其余目录是各 provider 的手工联调脚本（要真实 key 和外网），不是单元测试，
+# 所以只收集 tests/unit。
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+python_files = ["test_*.py"]

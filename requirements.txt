@@ -1,0 +1,8 @@
+# 全量安装。只想跑本地/WebUI 的话，装 requirements/core.txt 即可
+-r requirements/core.txt
+-r requirements/llm.txt
+-r requirements/tts.txt
+-r requirements/asr.txt
+-r requirements/platform.txt
+-r requirements/visual.txt
+-r requirements/chat-with-file.txt

@@ -1,0 +1,1 @@
+var model_name = "大肥鱼";
